@@ -33,3 +33,15 @@ function prompt {
 
     return " " 
 }
+
+
+# --- Dynamically generated Git aliases from .gitconfig ---
+function gs { git status $args }
+function gp { git pull $args }
+function ga { git add $args }
+function gpush { git push $args }
+function gcom { git commit -m $args }
+function gco { git checkout $args }
+function gbr { git branch $args }
+function glg { git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit $args }
+function gtoday { git gtoday $args }

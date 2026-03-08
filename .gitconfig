@@ -6,14 +6,14 @@
     gp = pull
     ga = add
     gpush = push
-    gcm = commit -m
-    co = checkout
-    br = branch
+    gcom = commit -m
+    gco = checkout
+    gbr = branch
 
     # Graphical logging with commit details
-    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    glg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
     # See commits from today
-    today = "!f() { git log --since='1 day ago' --oneline; }; f"
+    gtoday = "!f() { git log --since='1 day ago' --oneline; }; f"
 [color]
     ui = auto
 [column]

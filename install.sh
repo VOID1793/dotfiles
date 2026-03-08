@@ -1,12 +1,13 @@
 #!/bin/bash
-# 1. Flight Checks: Exit on error, unset variables, or pipe failure
+
+# Exit on error, unset variables, or pipe failure
 set -euo pipefail
 
-# 2. Get the absolute path of the dotfiles directory FIRST
+# Get the absolute path of the dotfiles directory FIRST
 # This anchors the rest of the script so it knows where to find your files
 DOTFILES_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-# 3. Create Symlinks with Backup Logic
+# Create Symlinks with Backup Logic
 echo "Linkin' up dotfiles..."
 
 # Define destination for bashrc
@@ -28,7 +29,31 @@ mkdir -p "$HOME/.config/powershell"
 # Link the profile
 ln -sf "$DOTFILES_DIR/Microsoft.PowerShell_profile.ps1" "$HOME/.config/powershell/Microsoft.PowerShell_profile.ps1"
 
-# 4. Function to install PowerShell Core portably
+# Function to dynamically add Git aliases to PowerShell profile
+set_pwsh_git_aliases() {
+    
+    echo "Setting up Git aliases in PowerShell profile..."
+    # Dynamically add Git aliases to PowerShell profile from .gitconfig
+    if [ -f "$DOTFILES_DIR/.gitconfig" ]; then
+    PS_PROFILE="$DOTFILES_DIR/Microsoft.PowerShell_profile.ps1"
+        # Remove any existing dynamic section to prevent duplicates
+        sed -i '/# --- Dynamically generated Git aliases from .gitconfig ---/,$d' "$PS_PROFILE"
+        echo "" >> "$PS_PROFILE"
+        echo "# --- Dynamically generated Git aliases from .gitconfig ---" >> "$PS_PROFILE"
+        while read -r line; do
+            IFS='=' read -r key value <<< "$line"
+            alias_name="${key#alias.}"
+            if [[ "$value" == \!* ]]; then
+                # For shell aliases starting with !, call git with the alias name
+                echo "function $alias_name { git $alias_name \$args }" >> "$PS_PROFILE"
+            else
+                # For regular git commands
+                echo "function $alias_name { git $value \$args }" >> "$PS_PROFILE"
+            fi
+        done < <(git config --file "$DOTFILES_DIR/.gitconfig" --list | grep '^alias\.')
+    fi
+}
+# Function to install PowerShell Core portably
 install_pwsh() {
     if command -v pwsh &> /dev/null; then
         echo "PowerShell is already installed. Skipping."
@@ -55,7 +80,7 @@ install_pwsh() {
         sudo apt-get install -y powershell
     fi
 }
-
+# Function to install Git if not present
 install_git() {
     if command -v git &> /dev/null; then
         echo "Git is already installed. Skipping."
@@ -66,7 +91,7 @@ install_git() {
     sudo apt-get update || true
     sudo apt-get install -y git
 }
-
+# Function to set the default editor based on availability
 set_editor() {
     if command -v code &> /dev/null; then
         export EDITOR="code --wait"
@@ -75,10 +100,17 @@ set_editor() {
     fi
 }
 
-# 5. Execute installation
+# Execute installation
 export DEBIAN_FRONTEND=noninteractive
+
 set_editor
-install_pwsh
 install_git
+set_pwsh_git_aliases
+install_pwsh
+
+# Automatically switch to PowerShell if it exists and we are in an interactive session
+if [[ $- == *i* ]] && command -v pwsh &> /dev/null; then
+    exec pwsh
+fi
 
 echo "Setup complete!"

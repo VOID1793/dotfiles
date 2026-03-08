@@ -12,12 +12,15 @@ This repository is a customized and AI-assisted revision of the GitHub Codespace
 - **DevOps Aliases**: Short aliases for common Terraform, Ansible, and Git commands:
   - Terraform: `tf` (terraform), `tfp` (terraform plan), `tfa` (terraform apply)
   - Ansible: `ap` (ansible-playbook), `av` (ansible-vault)
-  - Git: `gs` (git status), `gp` (git pull), `gpush` (git push), `gcm` (git commit -m)
+  - Git: Dynamically synced from `.gitconfig` to PowerShell (e.g., `gs` for `git status`, `ga` for `git add`)
 - **Automated Installation**: The `install.sh` script handles:
-  - Symlinking configuration files to your home directory
-  - Installing PowerShell Core if not present (on Debian/Ubuntu systems)
+  - Installing PowerShell Core and Git if not present (on Debian/Ubuntu systems)
+  - Symlinking configuration files (`.bashrc`, `.gitconfig`, PowerShell profile) to your home directory
+  - Dynamically generating PowerShell functions for all Git aliases in `.gitconfig`
+  - Setting the default editor (VS Code if available, otherwise nano)
   - Backing up existing configurations
-- **Cross-Platform Compatibility**: Works on any Debian-based Linux distribution with   Bash and PowerShell support that uses the apt package manager
+  - Automatically switching to PowerShell after setup (if interactive)
+- **Cross-Platform Compatibility**: Works on any Debian-based Linux distribution with Bash and PowerShell support that uses the apt package manager
 - **Codespaces-Friendly**: Detects GitHub Codespaces environment and adapts prompts accordingly
 
 ## Installation
@@ -34,11 +37,14 @@ This repository is a customized and AI-assisted revision of the GitHub Codespace
    ```
 
    This will:
-   - Install PowerShell Core (if not already installed)
-   - Create symlinks for `.bashrc` and `Microsoft.PowerShell_profile.ps1`
+   - Install PowerShell Core and Git (if not already installed)
+   - Create symlinks for `.bashrc`, `.gitconfig`, and the PowerShell profile
+   - Dynamically generate PowerShell functions for Git aliases
+   - Set the default editor
    - Backup any existing configurations
+   - Automatically switch to PowerShell (if in an interactive session)
 
-3. Restart your shell or source the profiles:
+3. If not auto-switched, restart your shell or source the profiles:
    ```bash
    # For Bash
    source ~/.bashrc
