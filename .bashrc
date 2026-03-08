@@ -98,11 +98,6 @@ alias tfa='terraform apply'
 # Ansible aliases
 alias ap='ansible-playbook'
 alias av='ansible-vault'
-# Git aliases
-alias gs='git status'
-alias gp='git pull'
-alias gpush='git push'
-alias gcm='git commit -m'
 
 # Terraform Autocomplete
 if command -v terraform &> /dev/null; then

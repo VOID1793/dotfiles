@@ -36,30 +36,49 @@ install_pwsh() {
     fi
 
     echo "Installing PowerShell Core..."
-    sudo apt-get update
+    
+    # We use '|| true' because pre-installed repos like Yarn often have expired keys
+    # which shouldn't block YOUR installation.
+    sudo apt-get update || true
     sudo apt-get install -y curl gnupg apt-transport-https
 
-    # Portable OS detection
     . /etc/os-release
-    OS_ID=$ID
-    VERSION_ID=$VERSION_ID
-
-    # Download and register Microsoft repo
-    curl -sSL "https://packages.microsoft.com/config/$OS_ID/$VERSION_ID/packages-microsoft-prod.deb" -o /tmp/packages-microsoft-prod.deb
+    
+    # Register Microsoft Repo
+    curl -sSL "https://packages.microsoft.com/config/$ID/$VERSION_ID/packages-microsoft-prod.deb" -o /tmp/packages-microsoft-prod.deb
     
     if [ -f /tmp/packages-microsoft-prod.deb ]; then
         sudo dpkg -i /tmp/packages-microsoft-prod.deb
         rm /tmp/packages-microsoft-prod.deb
-        sudo apt-get update
+        # Update again to pull in the new Microsoft list, again ignoring Yarn errors
+        sudo apt-get update || true
         sudo apt-get install -y powershell
+    fi
+}
+
+install_git() {
+    if command -v git &> /dev/null; then
+        echo "Git is already installed. Skipping."
+        return 0
+    fi
+
+    echo "Installing Git..."
+    sudo apt-get update || true
+    sudo apt-get install -y git
+}
+
+set_editor() {
+    if command -v code &> /dev/null; then
+        export EDITOR="code --wait"
     else
-        echo "Failed to register Microsoft repo. Installation aborted."
-        return 1
+        export EDITOR="nano"
     fi
 }
 
 # 5. Execute installation
 export DEBIAN_FRONTEND=noninteractive
+set_editor
 install_pwsh
+install_git
 
 echo "Setup complete!"
