@@ -1,13 +1,3 @@
-# --- 1. Simple Aliases (One-to-One executable mapping) ---
-Set-Alias tf  terraform
-Set-Alias ap  ansible-playbook
-Set-Alias av  ansible-vault
-
-# --- 2. Functions (For commands with arguments/logic) ---
-function tfa { terraform apply $args }
-function tfp { terraform plan $args }
-
-
 # --- 3. The Custom Prompt ---
 function prompt {
     $lastExit = $?
@@ -34,6 +24,20 @@ function prompt {
     return " " 
 }
 
+# Make the Right Arrow OR Tab accept the gray suggestion
+Set-PSReadLineKeyHandler -Key Tab -Function AcceptSuggestion
+
+# Set the prediction source to use both history and plugins
+Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+
+# --- Simple Aliases (One-to-One executable mapping) ---
+Set-Alias tf  terraform
+Set-Alias ap  ansible-playbook
+Set-Alias av  ansible-vault
+
+# --- Static Functions (For commands with arguments/logic) ---
+function tfa { terraform apply $args }
+function tfp { terraform plan $args }
 
 # --- Dynamically generated Git aliases from .gitconfig ---
 function gs { git status $args }

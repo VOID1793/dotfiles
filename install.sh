@@ -79,6 +79,7 @@ install_pwsh() {
         sudo apt-get update || true
         sudo apt-get install -y powershell
     fi
+
 }
 # Function to install Git if not present
 install_git() {
