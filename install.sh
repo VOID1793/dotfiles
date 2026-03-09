@@ -7,28 +7,42 @@ set -euo pipefail
 # This anchors the rest of the script so it knows where to find your files
 DOTFILES_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-# Create Symlinks with Backup Logic
-echo "Linkin' up dotfiles..."
+# Function to create or set the needed directories and files for the dotfiles to work
+make_dirs_files(){
 
-# Define destination for bashrc
-DEST="$HOME/.bashrc"
+    # Define destination for bashrc
+    DEST="$HOME/.bashrc"
 
-# Check if a real file exists (not a link) and back it up
-if [ -f "$DEST" ] && [ ! -L "$DEST" ]; then
-    echo "Existing .bashrc found. Backing up to .bashrc.bak"
-    mv "$DEST" "$DEST.bak"
-fi
+    # Check if a real file exists (not a link) and back it up
+    if [ -f "$DEST" ] && [ ! -L "$DEST" ]; then
+        echo "Existing .bashrc found. Backing up to .bashrc.bak"
+        mv "$DEST" "$DEST.bak"
+    fi
 
-# Link bashrc and gitconfig
-ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
+    # Remove existing directory if it's a real folder to avoid nesting
+    rm -rf "$HOME/.config/powershell/custom-themes"
 
-# Create the PowerShell config directory if it doesn't exist
-mkdir -p "$HOME/.config/powershell"
+    # Create the PowerShell config directory if it doesn't exist
+    mkdir -p "$HOME/.config/powershell"
 
-# Link the profile
-ln -sf "$DOTFILES_DIR/Microsoft.PowerShell_profile.ps1" "$HOME/.config/powershell/Microsoft.PowerShell_profile.ps1"
+    # Define the path for the local config
+    LOCAL_GITCONFIG="$HOME/.gitconfig.local"
+}
+# Function to set symlinks for the dotfiles
+set_symlinks(){
+    # Create Symlinks with Backup Logic
+    echo "Linkin' up dotfiles..."
 
+    # Link bashrc and gitconfig
+    ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
+    ln -sf "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
+
+    # Link the profile
+    ln -sf "$DOTFILES_DIR/Microsoft.PowerShell_profile.ps1" "$HOME/.config/powershell/Microsoft.PowerShell_profile.ps1"
+
+    # Link the entire custom-themes folder directly to the config root
+    ln -sfn "$DOTFILES_DIR/custom-themes" "$HOME/.config/powershell/custom-themes"
+}
 # Function to dynamically add Git aliases to PowerShell profile
 set_pwsh_git_aliases() {
     
@@ -81,6 +95,15 @@ install_pwsh() {
     fi
 
 }
+# Function to install OhMyPosh (Terminal Themes)
+install_ohmyposh(){
+
+    echo "Installing OhMyPosh!"
+
+    # Install Oh My Posh binary to a local bin folder
+    mkdir -p $HOME/.local/bin
+    curl -s https://ohmyposh.dev/install.sh | bash -s -- -d $HOME/.local/bin
+}
 # Function to install Git if not present
 install_git() {
     if command -v git &> /dev/null; then
@@ -100,14 +123,55 @@ set_editor() {
         export EDITOR="nano"
     fi
 }
+# Function to set up the local Git identity
+set_git_identity() {
 
+    # Only run if the local config doesn't exist to avoid overwriting manual changes
+    if [ ! -f "$LOCAL_GITCONFIG" ]; then
+        echo "No local git identity found. Detecting environment..."
+
+        # The :- syntax tells Bash: "Use $CODESPACES, but if it's unset, use an empty string"
+        if [ "${CODESPACES:-}" = "true" ]; then
+            # We do the same for GITHUB_USER just to be safe
+            GIT_NAME="${GITHUB_USER:-CodespaceUser}"
+            GIT_EMAIL="${GITHUB_USER:-user}@users.noreply.github.com"
+            echo "Codespaces detected."
+        
+        # 2. Fallback for WSL, Ubuntu, or generic Debian systems
+        else
+            SYS_USER=$(whoami)
+            SYS_HOST=$(hostname)
+            GIT_NAME="$SYS_USER"
+            GIT_EMAIL="${SYS_USER}@${SYS_HOST}.local"
+            echo "Local system detected. Using machine-context identity."
+        fi
+
+        # Write to the non-synced local file
+        cat <<EOF > "$LOCAL_GITCONFIG"
+[user]
+    name = $GIT_NAME
+    email = $GIT_EMAIL
+EOF
+        echo "Identity saved to $LOCAL_GITCONFIG ($GIT_EMAIL)"
+    fi
+}
 # Execute installation
 export DEBIAN_FRONTEND=noninteractive
 
-set_editor
-install_git
+# Invoke init functions
+make_dirs_files
+set_symlinks
+
+# Invoke setup functions
 set_pwsh_git_aliases
+set_editor
+set_git_identity
+
+# Invoke installation functions
+install_git
 install_pwsh
+install_ohmyposh
+
 
 # Automatically switch to PowerShell if it exists and we are in an interactive session
 if [[ $- == *i* ]] && command -v pwsh &> /dev/null; then

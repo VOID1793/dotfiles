@@ -1,7 +1,10 @@
+[include]
+    path = ~/.gitconfig.local
 [core]
     editor = ${EDITOR}
     autocrlf = input
 [alias]
+    # THIS LIST OF REFERENCES IS READ BY INSTALL.SH IN ORDER TO GENERATE POWERSHELL FUNCTIONAL ALIASES
     gs = status
     gp = pull
     ga = add
