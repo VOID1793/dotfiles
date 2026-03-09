@@ -66,6 +66,7 @@ function tfp { terraform plan $args }
 
 
 
+
 # --- Dynamically generated Git aliases from .gitconfig ---
 function gs { git status $args }
 function gpull { git pull $args }
