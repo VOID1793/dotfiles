@@ -115,6 +115,23 @@ install_git() {
     sudo apt-get update || true
     sudo apt-get install -y git
 }
+# Function to install GitHub CLI
+install_gh_cli(){
+    if command -v gh &> /dev/null; then
+        echo "GH_CLI is already installed. Skipping."
+        return 0
+    fi
+
+    echo "Installing GH_CLI..."
+
+    wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+    sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+
+    sudo apt-get update || true
+    sudo apt-get install -y gh
+}
 # Function to set the default editor based on availability
 set_editor() {
     if command -v code &> /dev/null; then
@@ -171,6 +188,7 @@ set_git_identity
 install_git
 install_pwsh
 install_ohmyposh
+install_gh_cli
 
 
 # Automatically switch to PowerShell if it exists and we are in an interactive session
